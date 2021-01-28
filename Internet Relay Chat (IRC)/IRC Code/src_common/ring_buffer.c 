@@ -1,0 +1,80 @@
+// Chengbo Xing
+// CS 3337
+// ring_buffer.c 
+// 5/3/2020
+
+#include "irc_server.h"
+
+int BUF_SIZE = 1024;
+
+static void	inc_ptr(t_rb *rb, char **ptr)
+{
+  if (*ptr == rb->buf + BUF_SIZE)
+    *ptr = rb->buf;
+  else
+    (*ptr)++;
+}
+
+t_rb	*rb_init(void)
+{
+  t_rb	*rb;
+
+  if ((rb = malloc(sizeof(t_rb))) == NULL)
+    return (NULL);
+  if ((rb->buf = (char *)malloc(BUF_SIZE)) == NULL)
+    return (NULL);
+  rb->wend = rb->buf;
+  rb->rend = rb->buf;
+  return (rb);
+}
+
+size_t	rb_get_space(t_rb *rb)
+{
+  return ((rb->wend >= rb->rend)
+          ? (BUF_SIZE - (size_t)(rb->wend - rb->rend))
+          : (size_t)(rb->rend - rb->wend));
+}
+// Write in
+void	rb_write(t_rb *rb, char *data)
+{
+  int	i;
+
+  i = 0;
+  while (data[i])
+    {
+      if (data[i] != '\r')
+        {
+          *rb->wend = data[i];
+          inc_ptr(rb, &rb->wend);
+        }
+      i++;
+    }
+}
+// Read line
+char		*rb_readline(t_rb *rb)
+{
+  size_t	ct;
+  char		*tmp;
+  char		*line;
+
+  ct = 0;
+  tmp = rb->rend;
+  while (tmp != rb->wend)
+    {
+      if (*tmp == '\n')
+        break;
+      inc_ptr(rb, &tmp);
+      ct++;
+    }
+  if (tmp == rb->wend || ((line = (char *)malloc(ct + 1)) == NULL))
+    return (NULL);
+  ct = 0;
+  while (*rb->rend != '\n')
+    {
+      line[ct++] = *rb->rend;
+      inc_ptr(rb, &rb->rend);
+    }
+  inc_ptr(rb, &rb->rend);
+  line[ct] = 0;
+  return (line);
+}

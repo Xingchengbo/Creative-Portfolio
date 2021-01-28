@@ -1,0 +1,11 @@
+#this is the configure file of the server.
+
+port = 8899
+
+loglevel = 0
+
+maxclient = 2
+
+maxbuffersize = 2048
+
+logfile = ./ServerLog.txt
